@@ -1,0 +1,128 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Futuristic Recipe Carousel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>My Recipe Book</h1>
+  </header>
+
+  <main>
+    <!-- Carousel navigation buttons -->
+    <div class="carousel-nav">
+      <button id="prevBtn">&#x2039;</button>
+      <button id="nextBtn">&#x203A;</button>
+    </div>
+
+    <section class="carousel-container">
+      <div class="recipe-carousel" id="carousel">
+
+        <!-- Example of an existing recipe card -->
+        <div class="recipe-card">
+          <div class="recipe-content">
+            <h2>Spicy Avocado Toast</h2>
+            <p><strong>Ingredients:</strong></p>
+            <ul>
+              <li>2 slices sourdough bread</li>
+              <li>1 ripe avocado</li>
+              <li>Chili flakes, olive oil, salt</li>
+            </ul>
+            <p><strong>Instructions:</strong> Mash avocado, spread on toasted bread, top with chili flakes, drizzle olive oil, season to taste.</p>
+          </div>
+          <div class="images-container">
+            <img src="https://via.placeholder.com/100" alt="Avocado Toast 1" />
+            <img src="https://via.placeholder.com/100" alt="Avocado Toast 2" />
+          </div>
+        </div>
+
+        <!-- Editable empty card -->
+        <div class="recipe-card empty" id="newCard">
+          <div class="placeholder">Click here and paste your recipe…</div>
+          <div class="recipe-content" contenteditable="true"></div>
+          <div class="images-container" id="newImages"></div>
+          <div class="image-uploader">
+            <input type="file" id="imgUpload" accept="image/*" multiple />
+          </div>
+          <button id="saveBtn">Save Recipe</button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const carousel = document.getElementById('carousel');
+    const cardWidth = 320; // same as CSS flex-basis + gap
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      carousel.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      carousel.scrollBy({ left: cardWidth, behavior: 'smooth' });
+    });
+
+    const newCard = document.getElementById('newCard');
+    const editable = newCard.querySelector('.recipe-content');
+    const placeholder = newCard.querySelector('.placeholder');
+
+    // On focus show editing area
+    newCard.addEventListener('focusin', () => placeholder.style.display = 'none');
+    newCard.addEventListener('focusout', () => {
+      if (!editable.textContent.trim()) {
+        placeholder.style.display = 'block';
+      }
+    });
+
+    // Paste handler: plain text
+    editable.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      this.innerHTML = '';
+      text.split(/\n+/).forEach(line => {
+        const p = document.createElement('p');
+        p.textContent = line.trim();
+        this.appendChild(p);
+      });
+    });
+
+    // Image upload for new card
+    document.getElementById('imgUpload').addEventListener('change', function(e) {
+      const container = document.getElementById('newImages');
+      Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const img = document.createElement('img');
+          img.src = ev.target.result;
+          container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // Save new recipe into a static card
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      if (!editable.textContent.trim()) return;
+      // build new card
+      const card = document.createElement('div');
+      card.className = 'recipe-card';
+      const content = document.createElement('div'); content.className = 'recipe-content';
+      content.innerHTML = editable.innerHTML;
+      const imgs = document.createElement('div'); imgs.className = 'images-container';
+      // clone images
+      newCard.querySelectorAll('#newImages img').forEach(img => imgs.appendChild(img.cloneNode()));
+      card.appendChild(content);
+      card.appendChild(imgs);
+      // insert before newCard
+      carousel.insertBefore(card, newCard);
+      // reset newCard
+      editable.innerHTML = '';
+      document.getElementById('newImages').innerHTML = '';
+      placeholder.style.display = 'block';
+    });
+  </script>
+</body>
+</html>
